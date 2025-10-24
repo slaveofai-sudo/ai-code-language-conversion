@@ -1,0 +1,338 @@
+# AI Code Migration Platform Configuration
+
+# 支持的编程语言
+supported_languages:
+  - id: java
+    name: Java
+    extensions: [.java]
+    parser: tree-sitter-java
+    package_manager: maven  # maven, gradle
+    
+  - id: python
+    name: Python
+    extensions: [.py]
+    parser: tree-sitter-python
+    package_manager: pip
+    
+  - id: javascript
+    name: JavaScript
+    extensions: [.js, .jsx]
+    parser: tree-sitter-javascript
+    package_manager: npm
+    
+  - id: typescript
+    name: TypeScript
+    extensions: [.ts, .tsx]
+    parser: tree-sitter-typescript
+    package_manager: npm
+    
+  - id: go
+    name: Go
+    extensions: [.go]
+    parser: tree-sitter-go
+    package_manager: go-modules
+    
+  - id: cpp
+    name: C++
+    extensions: [.cpp, .cc, .cxx, .h, .hpp]
+    parser: tree-sitter-cpp
+    package_manager: cmake
+    
+  - id: rust
+    name: Rust
+    extensions: [.rs]
+    parser: tree-sitter-rust
+    package_manager: cargo
+
+# 多 AI 编排配置
+multi_ai:
+  enabled: true  # 是否启用多 AI 模式
+  
+  # 翻译策略
+  # - round_robin: 轮询（负载均衡，依次使用不同模型）
+  # - fastest: 竞速（多个模型同时翻译，返回最快的结果）
+  # - all_consensus: 共识（多个模型翻译后综合结果）
+  # - quality_first: 质量优先（优先使用高质量模型，失败时自动降级）
+  # - random: 随机选择
+  strategy: quality_first
+  
+  # 每种策略的配置
+  strategies:
+    fastest:
+      max_concurrent_models: 3  # 最多同时使用几个模型
+      models: ["gpt-4o", "claude-3.5", "gemini"]  # 参与竞速的模型
+      
+    all_consensus:
+      consensus_models: ["gpt-4", "claude-3.5", "gemini"]  # 参与投票的模型
+      min_agreement: 2  # 至少需要几个模型同意
+      
+    quality_first:
+      model_priority:  # 模型优先级（数字越小优先级越高）
+        - claude-3.5
+        - gpt-4o
+        - gpt-4
+        - gemini
+        - deepseek
+        - qwen
+        - codellama
+      auto_fallback: true  # 失败时自动切换到下一个模型
+      
+    round_robin:
+      models: ["gpt-4o", "claude-3.5", "gemini", "deepseek"]  # 轮询的模型列表
+
+# AI 模型配置
+ai_models:
+  # OpenAI GPT
+  gpt-4:
+    provider: openai
+    model_name: gpt-4-turbo
+    max_tokens: 4096
+    temperature: 0.1
+    recommended_for: [java, python, javascript, typescript, go]
+    cost_per_1k_tokens: 0.01
+    
+  gpt-4o:
+    provider: openai
+    model_name: gpt-4o
+    max_tokens: 4096
+    temperature: 0.1
+    recommended_for: [all]
+    cost_per_1k_tokens: 0.005
+    
+  # Anthropic Claude
+  claude-3.5-sonnet:
+    provider: anthropic
+    model_name: claude-3-5-sonnet-20241022
+    max_tokens: 8192
+    temperature: 0.1
+    recommended_for: [java, python, go, rust]
+    cost_per_1k_tokens: 0.003
+    
+  # 本地模型
+  codellama:
+    provider: local
+    model_name: codellama:13b
+    endpoint: http://localhost:11434
+    recommended_for: [python, javascript]
+    cost_per_1k_tokens: 0.0
+  
+  # DeepSeek (国产大模型)
+  deepseek-coder:
+    provider: deepseek
+    model_name: deepseek-coder
+    max_tokens: 4096
+    temperature: 0.1
+    recommended_for: [java, python, javascript, go]
+    cost_per_1k_tokens: 0.0002
+    
+  # Google Gemini
+  gemini-pro:
+    provider: google
+    model_name: gemini-pro
+    max_tokens: 4096
+    temperature: 0.1
+    recommended_for: [all]
+    cost_per_1k_tokens: 0.00025
+    
+  # 阿里通义千问
+  qwen-coder:
+    provider: qwen
+    model_name: qwen-coder-turbo
+    max_tokens: 4096
+    temperature: 0.1
+    recommended_for: [java, python, go]
+    cost_per_1k_tokens: 0.0002
+
+# 转换策略
+conversion_strategies:
+  # 命名规范转换
+  naming_conventions:
+    java_to_python:
+      class_name: PascalCase  # 保持不变
+      method_name: snake_case  # camelCase → snake_case
+      constant: UPPER_SNAKE_CASE
+      
+    python_to_java:
+      class_name: PascalCase
+      method_name: camelCase  # snake_case → camelCase
+      constant: UPPER_SNAKE_CASE
+      
+    javascript_to_python:
+      class_name: PascalCase
+      method_name: snake_case
+      constant: UPPER_SNAKE_CASE
+  
+  # 类型映射
+  type_mappings:
+    java_to_python:
+      "int": "int"
+      "long": "int"
+      "float": "float"
+      "double": "float"
+      "boolean": "bool"
+      "String": "str"
+      "List<T>": "List[T]"
+      "Map<K,V>": "Dict[K, V]"
+      "void": "None"
+      
+    python_to_java:
+      "int": "long"
+      "float": "double"
+      "bool": "boolean"
+      "str": "String"
+      "list": "ArrayList"
+      "dict": "HashMap"
+      "None": "void"
+      
+    java_to_go:
+      "int": "int32"
+      "long": "int64"
+      "String": "string"
+      "List<T>": "[]T"
+      "Map<K,V>": "map[K]V"
+  
+  # 库/框架映射
+  library_mappings:
+    java_to_python:
+      "java.util.List": "typing.List"
+      "java.util.ArrayList": "list"
+      "java.util.HashMap": "dict"
+      "java.util.Optional": "typing.Optional"
+      "java.time.LocalDateTime": "datetime.datetime"
+      "org.springframework.web": "fastapi"
+      "org.junit": "pytest"
+      
+    python_to_java:
+      "fastapi": "org.springframework.boot"
+      "requests": "java.net.http.HttpClient"
+      "pytest": "org.junit.jupiter"
+      "pandas": "org.apache.commons.csv"
+
+# 项目结构模板
+project_templates:
+  java:
+    structure:
+      - src/main/java
+      - src/test/java
+      - src/main/resources
+    build_files:
+      - pom.xml  # Maven
+      - build.gradle  # Gradle
+    config_files:
+      - application.properties
+      - application.yml
+      
+  python:
+    structure:
+      - src
+      - tests
+      - docs
+    build_files:
+      - requirements.txt
+      - setup.py
+      - pyproject.toml
+    config_files:
+      - .env
+      - config.yaml
+      
+  javascript:
+    structure:
+      - src
+      - tests
+      - public
+    build_files:
+      - package.json
+      - package-lock.json
+    config_files:
+      - .env
+      - webpack.config.js
+      
+  go:
+    structure:
+      - cmd
+      - pkg
+      - internal
+      - test
+    build_files:
+      - go.mod
+      - go.sum
+    config_files:
+      - .env
+
+# 并发与性能
+performance:
+  max_concurrent_tasks: 4
+  chunk_size: 10  # 每批处理的文件数
+  cache_enabled: true
+  cache_ttl: 86400  # 24 hours
+  
+# Git 配置
+git:
+  max_repo_size: 524288000  # 500MB
+  clone_timeout: 300
+  clone_depth: 1
+  excluded_dirs:
+    - node_modules
+    - .git
+    - __pycache__
+    - target
+    - build
+    - dist
+    - .venv
+    - venv
+
+# 代码质量检查
+quality_checks:
+  enabled: true
+  syntax_validation: true
+  style_check: true
+  complexity_analysis: true
+  
+# 提示词模板
+prompt_templates:
+  system_prompt: |
+    You are an expert code translator specializing in converting code between programming languages.
+    Your task is to translate code while preserving:
+    1. Logic and functionality
+    2. Code structure and organization
+    3. Comments and documentation
+    4. Error handling patterns
+    5. Best practices for the target language
+    
+  translation_prompt: |
+    Convert the following {source_lang} code to {target_lang}.
+    
+    Requirements:
+    - Maintain the same functionality
+    - Follow {target_lang} naming conventions
+    - Use idiomatic {target_lang} patterns
+    - Preserve comments
+    - Add type hints if applicable
+    
+    Source Code ({source_lang}):
+    ```{source_lang}
+    {source_code}
+    ```
+    
+    Provide only the translated {target_lang} code:
+    
+  fix_error_prompt: |
+    The following {language} code has errors:
+    
+    ```{language}
+    {code}
+    ```
+    
+    Errors:
+    {errors}
+    
+    Please fix these errors and return the corrected code:
+
+# 日志配置
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: logs/app.log
+  max_size: 10485760  # 10MB
+  backup_count: 5
+
