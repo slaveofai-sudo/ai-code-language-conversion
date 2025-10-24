@@ -308,7 +308,7 @@ docker run -p 8000:8000 -p 3000:3000 code-migration
 ### 📞 联系我们
 
 - 💬 问题反馈：[GitHub Issues](https://github.com/yourusername/ai-code-migration/issues)
-- 📧 邮件：your-email@example.com
+- 📧 邮件：y956893@163.com
 
 ---
 
@@ -528,7 +528,7 @@ This project is licensed under the [MIT License](LICENSE).
 ### 📞 Contact
 
 - 💬 Issues: [GitHub Issues](https://github.com/yourusername/ai-code-migration/issues)
-- 📧 Email: your-email@example.com
+- 📧 Email: y956893@163.com
 
 ---
 
