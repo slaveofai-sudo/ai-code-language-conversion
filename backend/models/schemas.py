@@ -64,6 +64,8 @@ class ConversionRequest(BaseModel):
     - git_url: Git repository URL (optional) / Git仓库URL（可选）
     - ai_model: AI model to use / 使用的AI模型
     - multi_ai_strategy: Multi-AI strategy (optional) / 多AI策略（可选）
+    - target_framework: Target framework (optional) / 目标框架（可选）
+    - runtime_environment: Runtime environment (optional) / 运行环境（可选）
     """
     source_type: SourceType = Field(..., description="输入源类型: git 或 upload")
     git_url: Optional[HttpUrl] = Field(None, description="Git仓库URL (source_type=git时必填)")

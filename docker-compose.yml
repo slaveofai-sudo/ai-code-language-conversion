@@ -1,94 +1,88 @@
 version: '3.8'
 
 services:
-  # Redis (用于 Celery 任务队列)
+  # Redis Cache Service / Redis缓存服务
   redis:
     image: redis:7-alpine
+    container_name: ai-migration-redis
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3
+    networks:
+      - ai-migration-network
+    restart: unless-stopped
 
-  # PostgreSQL (可选 - 生产环境推荐)
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: code_migration
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-
-  # FastAPI 后端
+  # Backend API Service / 后端API服务
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile.backend
+      context: ./backend
+      dockerfile: ../Dockerfile.backend
+    container_name: ai-migration-backend
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/code_migration
+      # Redis Configuration
       - REDIS_URL=redis://redis:6379/0
+      
+      # AI API Keys (从 .env 文件读取)
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - QWEN_API_KEY=${QWEN_API_KEY}
+      
+      # Server Configuration
+      - HOST=0.0.0.0
+      - PORT=8000
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      
+      # Directories
+      - UPLOAD_DIR=/app/data/uploads
+      - OUTPUT_DIR=/app/data/outputs
+      - CACHE_DIR=/app/data/cache
     volumes:
-      - ./backend:/app/backend
       - ./data:/app/data
-      - ./logs:/app/logs
+      - ./backend:/app
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
-    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ai-migration-network
+    restart: unless-stopped
 
-  # Celery Worker
-  celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/code_migration
-      - REDIS_URL=redis://redis:6379/0
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-    volumes:
-      - ./backend:/app/backend
-      - ./data:/app/data
-      - ./logs:/app/logs
-    depends_on:
-      - redis
-      - postgres
-    command: celery -A backend.core.celery_app worker --loglevel=info
-
-  # React 前端
+  # Frontend Service / 前端服务
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: ai-migration-frontend
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_URL=http://localhost:8000
-    volumes:
-      - ./frontend/src:/app/src
+      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_WS_BASE_URL=ws://localhost:8000
     depends_on:
       - backend
-    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - ai-migration-network
+    restart: unless-stopped
 
 volumes:
-  redis_data:
-  postgres_data:
+  redis-data:
+    driver: local
 
+networks:
+  ai-migration-network:
+    driver: bridge

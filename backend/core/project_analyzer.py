@@ -19,6 +19,17 @@ from loguru import logger
 
 from models.schemas import ProjectInfo, FileInfo, SupportedLanguage
 
+# Lazy import to avoid circular dependency / 延迟导入以避免循环依赖
+_framework_detector = None
+
+def get_framework_detector():
+    """Get framework detector instance / 获取框架检测器实例"""
+    global _framework_detector
+    if _framework_detector is None:
+        from .framework_detector import FrameworkDetector
+        _framework_detector = FrameworkDetector()
+    return _framework_detector
+
 
 class ProjectAnalyzer:
     """项目结构分析器"""
@@ -50,16 +61,28 @@ class ProjectAnalyzer:
         language: SupportedLanguage
     ) -> ProjectInfo:
         """
-        分析项目结构
+        Analyze project structure including frameworks / 分析项目结构（包括框架）
         
         Args:
-            project_path: 项目路径
-            language: 源语言
+            project_path: Project path / 项目路径
+            language: Source language / 源语言
             
         Returns:
-            ProjectInfo: 项目信息
+            ProjectInfo: Project information / 项目信息
         """
-        logger.info(f"开始分析项目: {project_path}, 语言: {language}")
+        logger.info(f"🔍 开始分析项目: {project_path}, 语言: {language}")
+        
+        # Detect frameworks / 检测框架
+        logger.info("📦 检测项目框架...")
+        framework_detector = get_framework_detector()
+        detected_frameworks = framework_detector.detect_frameworks(project_path)
+        primary_framework = framework_detector.get_primary_framework()
+        
+        if primary_framework:
+            logger.info(
+                f"✅ 主要框架: {primary_framework['name']} "
+                f"(置信度: {primary_framework['confidence']:.0%})"
+            )
         
         # 收集所有源文件
         files = self._collect_source_files(project_path, language)
@@ -76,6 +99,13 @@ class ProjectAnalyzer:
         # 分析项目结构
         structure = self._analyze_structure(project_path, language)
         
+        # Add frameworks info to structure / 将框架信息添加到结构中
+        structure['frameworks'] = {
+            'detected': detected_frameworks,
+            'primary': primary_framework,
+            'count': len(detected_frameworks)
+        }
+        
         # 分析依赖
         dependencies = await self._analyze_dependencies(project_path, language)
         
@@ -90,8 +120,8 @@ class ProjectAnalyzer:
         )
         
         logger.info(
-            f"项目分析完成: {len(file_infos)} 个文件, "
-            f"{total_lines} 行代码"
+            f"✅ 项目分析完成: {len(file_infos)} 个文件, "
+            f"{total_lines} 行代码, {len(detected_frameworks)} 个框架"
         )
         
         return project_info
