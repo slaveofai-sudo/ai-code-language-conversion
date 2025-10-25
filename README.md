@@ -1,3 +1,5 @@
+
+
 # 🚀 AI Code Migration Platform
 
 <div align="center">
@@ -140,7 +142,7 @@ curl -X POST http://localhost:8000/api/v1/convert -d '{
 }'
 ```
 
-**详细文档**: 📖 [自定义AI模型完全指南](CUSTOM_AI_MODELS_GUIDE.md)
+**所有详细配置请参考下方API调用示例**
 
 ### 🎨 五种智能策略
 
@@ -595,25 +597,15 @@ docker build -t code-migration .
 docker run -p 8000:8000 -p 3000:3000 code-migration
 ```
 
-### 📖 详细文档
+### 📖 完整文档
 
-#### 核心功能文档
-
-| 文档 | 说明 | 字数 |
-|------|------|------|
-| 📘 [README.md](README.md) | 完整使用指南（本文档） | 本文档 |
-| 🤖 [自定义AI模型指南](CUSTOM_AI_MODELS_GUIDE.md) | 添加任何AI模型的完整教程 | 8000+ |
-| 🔍 [代码检测指南](CODE_INSPECTION_GUIDE.md) | 代码质量分析和学习文档生成 | 6000+ |
-| 🚀 [多AI优化指南](MULTI_AI_OPTIMIZATION_GUIDE.md) | 多AI协同代码优化完整指南 | 8000+ |
-| 📊 [功能总结 V2.0](FEATURE_SUMMARY_V2.0.md) | V2.0新功能详细说明 | 4000+ |
-| ⚡ [快速示例](QUICK_EXAMPLE.md) | Spring Boot转FastAPI实战示例 | 2000+ |
-
-#### 快速链接
-
-- **想添加自定义AI模型？** → [自定义AI模型指南](CUSTOM_AI_MODELS_GUIDE.md)
-- **想了解代码优化功能？** → [多AI优化指南](MULTI_AI_OPTIMIZATION_GUIDE.md)
-- **想生成学习文档？** → [代码检测指南](CODE_INSPECTION_GUIDE.md)
-- **想看实际案例？** → [快速示例](QUICK_EXAMPLE.md)
+本 README 已包含所有功能的完整使用说明，包括：
+- ✅ 快速开始指南
+- ✅ API 调用示例（基础转换、三维度迁移、测试生成、代码分析、成本估算等）
+- ✅ 自定义AI模型配置
+- ✅ 多AI优化使用方法
+- ✅ 代码检测和学习文档生成
+- ✅ CLI 工具和 Web 界面使用
 
 ### 🤝 贡献指南
 
